@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jzsec.modules.watch.dao.WatchDao">
+	<select id="findList" resultType="Watch">
+		select * from (
+			select ymtCode, sum(triggerDateCnt) triggerCnt, count(*) triggerDates, max(lastTime) AS triggerLastTime
+				,IF(rw.ymt_code IS NOT NULL, IF(rw.is_follow=1, 1, 0), 0) AS isFollow
+			from (	
+			    select tr.ymt_code as ymtCode, count(*) as triggerDateCnt, max(tr.trigger_time) as lastTime 
+			    from rtc_rule_trigger_record tr 
+			    <choose>
+			        <when test="eplList !=null and eplList.size() != 0">
+			            where tr.epl_id in 
+						<foreach collection="eplList" item="item" separator="," open="(" close=")">
+			                #{item.eplId}
+				        </foreach>
+			        </when>
+			        <otherwise>
+			            where tr.epl_id is null
+			        </otherwise>
+			    </choose>
+			    <if test="ymtCode != null and ymtCode !=''" >
+					and ymt_code = #{ymtCode}
+				</if>
+				<if test="startDate != null and startDate !=''">
+					and trigger_time &gt;= str_to_date(#{startDate,jdbcType=DATE},'%Y-%m-%d %H:%i:%S')
+				</if>
+				<if test="endDate != null and endDate !=''" >
+					and trigger_time &lt;= str_to_date(#{endDate,jdbcType=DATE},'%Y-%m-%d %H:%i:%S')
+				</if>
+			    group by ymtCode, date_format(trigger_time,'%Y-%m-%d')
+			) t 
+			left join rtc.rtc_watchlist rw
+			on t.ymtCode = rw.ymt_code
+			group by ymtCode
+		) tt
+		where 1=1
+		<if test="isFollow != null and isFollow !=''" >
+			and isFollow = #{isFollow}
+		</if>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY triggerCnt DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+    	insert into rtc.rtc_watchlist(ymt_code, is_follow) 
+    	values (#{ymtCode}, #{isFollow})
+	</insert>
+	
+	<update id="update">
+		update rtc.rtc_watchlist 
+		set is_follow = #{isFollow} 
+		where ymt_code = #{ymtCode}
+	</update>
+	
+	<select id="findUniqueByProperty" resultType="Watch" statementType="STATEMENT">
+		select
+		id
+		,fundid
+		,custid
+		,fundname
+		,ymt_code AS ymtCode
+		,orgid
+		,orgname
+		,is_follow AS isFollow
+		from rtc.rtc_watchlist
+		where ${propertyName} = '${value}'
+	</select>
+</mapper>

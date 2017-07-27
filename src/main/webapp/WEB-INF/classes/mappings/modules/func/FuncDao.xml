@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jzsec.modules.func.dao.FuncDao">
+	<select id="findList" resultType="Func" parameterType="Func">
+		select
+		t.id
+		,t.funcid
+		,t.func_name AS funcname
+		,t.schema_id AS schemaId
+		,tt.schema_name AS schemaName
+		,tt.schema_describe AS schemaDescribe
+		,func_sql AS funcsql
+		,func_statistic_sql AS funcStatisticSql
+		from rtc.rtc_query_fun t, rtc_xp_schema tt
+		where t.schema_id = tt.schema_id
+		<if test="keyword != '' and keyword != null">
+			and (t.func_name like concat('%', #{keyword}, '%') or t.func_sql like concat('%', #{keyword}, '%'))
+		</if>
+		order by t.id
+	</select>
+
+	<select id="get" resultType="Func">
+		select
+		id
+		,funcid
+		,func_name AS funcname
+		,schema_id AS schemaId
+		,func_sql AS funcsql
+		,func_statistic_sql AS funcStatisticSql
+		from rtc.rtc_query_fun
+		where funcid=#{funcid}
+	</select>
+
+	<update id="update">
+		UPDATE rtc.rtc_query_fun SET
+		func_name = #{funcname},
+		schema_id = #{schemaId},
+		func_sql = #{funcsql},
+		func_statistic_sql = #{funcStatisticSql}
+		WHERE id = #{id}
+	</update>
+
+	<insert id="insert">
+		INSERT INTO rtc.rtc_query_fun(
+		funcid,
+		func_name,
+		schema_id,
+		func_sql,
+		func_statistic_sql
+		) VALUES (
+		#{funcid},
+		#{funcname},
+		#{schemaId},
+		#{funcsql},
+		#{funcStatisticSql}
+		)
+	</insert>
+
+	<update id="delete">
+		DELETE FROM rtc.rtc_query_fun
+		WHERE id = #{id}
+	</update>
+	
+	<select id="batchInsert" parameterType="java.util.List">
+      INSERT INTO rtc.rtc_epl_query_fun_relation(epl_id,funcid) VALUES
+      <foreach collection="list" item="itm" separator=",">
+            (#{itm.eplId},#{itm.funcid})
+      </foreach>
+    </select>
+    
+	<delete id="deleteByEplId" parameterType="java.lang.Integer">
+		DELETE FROM rtc.rtc_epl_query_fun_relation
+		WHERE epl_id = #{eplId}
+	</delete>
+	
+	<select id="findUniqueByProperty" resultType="Func" statementType="STATEMENT">
+		select
+		t.id
+		,t.funcid
+		,t.func_name AS funcname
+		,t.schema_id AS schemaId
+		,tt.schema_name AS schemaName
+		,tt.schema_describe AS schemaDescribe
+		,func_sql AS funcsql
+		,func_statistic_sql AS funcStatisticSql
+		from rtc.rtc_query_fun t, rtc_xp_schema tt
+		where t.schema_id = tt.schema_id
+		and t.${propertyName} = '${value}'
+	</select>
+	
+	<select id="findNameList" resultType="Func">
+		select
+		funcid
+		,func_name AS funcname
+		from rtc.rtc_query_fun
+	</select>
+
+	<select id="findFuncByEplId" resultType="Func" parameterType="java.lang.Integer">
+		select f.id, r.funcid, f.schema_id AS schemaId, f.func_name as funcname, f.func_sql as funcsql, 
+				f.func_statistic_sql AS funcStatisticSql, d.fieldStr
+		from rtc_epl_query_fun_relation r
+		join rtc_query_fun f
+		on r.funcid=f.funcid
+		join
+		(
+		select funcid, group_concat(concat_ws('@',field_name,CONVERT(is_statistic,char),CONVERT(is_condition,char),field_describe)) fieldStr from rtc_fun_field group by funcid
+		) d
+		on f.funcid=d.funcid
+		where r.epl_id=${_parameter}
+	</select>
+	
+	<select id="findFuncByFuncid" resultType="Func" statementType="STATEMENT">
+		select f.id, f.funcid, f.schema_id AS schemaId, f.func_name as funcname, f.func_sql as funcsql, 
+				f.func_statistic_sql AS funcStatisticSql, d.fieldStr
+		from rtc_query_fun f
+		join
+		(
+		select funcid, group_concat(concat_ws('@',field_name,CONVERT(is_statistic,char),CONVERT(is_condition,char),field_describe)) fieldStr from rtc_fun_field group by funcid
+		) d
+		on f.funcid=d.funcid
+		where d.funcid=${_parameter}
+	</select>
+</mapper>

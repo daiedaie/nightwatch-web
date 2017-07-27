@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jzsec.modules.trigger.dao.LetterDao">
+	<select id="findList" resultType="Letter" parameterType="Letter">
+		select DISTINCT 
+		rl.id
+		,rl.cust_name AS custName
+		,rl.stockholder
+		,rl.branch_code AS branchCode
+		,rl.letter_type AS letterType
+		,rl.letter_from AS letterFrom
+		,rl.receive_time AS receiveTime
+		,rl.unique_rowid AS uniqueRowid
+		,rl.reason
+		,rl.remark
+		,rl.letter_dis AS letterDis
+		,rc.orgname
+		,rc.ymt_code AS ymtCode
+		,rt.epl_id AS eplId
+		,rt.epl_name AS eplName
+		,IF(rt.triggerCnt is null, 0, rt.triggerCnt) AS triggerCnt
+		from rtc.rtc_letter rl
+		left join rtc.rtc_custinfo rc
+		on rl.cust_name = rc.fundname
+		and rl.branch_code = rc.orgid
+		left join (
+			select tr.ymt_code, tr.epl_id, tr.epl_name, count(1) triggerCnt
+			from rtc.rtc_rule_trigger_record tr
+			where tr.trigger_time &gt;= str_to_date(#{startDate,jdbcType=DATE},'%Y-%m-%d %H:%i:%S')
+				and tr.trigger_time &lt;= str_to_date(#{endDate,jdbcType=DATE},'%Y-%m-%d %H:%i:%S')
+			group by tr.ymt_code, tr.epl_id, tr.epl_name
+		) rt 
+		on rt.ymt_code = rc.ymt_code
+		where 1=1
+		<if test="custName != '' and custName != null">
+			and rl.cust_name like concat('%', #{custName}, '%')
+		</if>
+		<if test="ymtCode != '' and ymtCode != null">
+			and rc.ymt_code = #{ymtCode}
+		</if>
+		order by receiveTime desc
+	</select>
+	<select id="findUniqueByProperty" resultType="Letter" statementType="STATEMENT">
+		select DISTINCT 
+		rl.id
+		,rl.cust_name AS custName
+		,rl.stockholder
+		,rl.branch_code AS branchCode
+		,rl.letter_type AS letterType
+		,rl.letter_from AS letterFrom
+		,rl.receive_time AS receiveTime
+		,rl.unique_rowid AS uniqueRowid
+		,rl.reason
+		,rl.remark
+		,rl.letter_dis AS letterDis
+		,rc.orgname
+		,rc.ymt_code AS ymtCode
+		from rtc.rtc_letter rl
+		left join rtc.rtc_custinfo rc
+		on rl.cust_name = rc.fundname
+		and rl.branch_code = rc.orgid
+		where rl.${propertyName} = '${value}'
+	</select>
+</mapper>

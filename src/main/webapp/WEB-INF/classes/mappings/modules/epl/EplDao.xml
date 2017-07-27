@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jzsec.modules.epl.dao.EplDao">
+	<select id="findList" resultType="Epl">
+		select ttt.* 
+		, concat(group_concat(concat(tttt.threshold_name, '=', tttt.threshold_value))) thresholds
+		from (
+			select
+			t.id
+			,t.epl_id AS eplId
+			,group_concat(tt.category_id) AS eplParents
+			,t.epl_name AS eplName
+			,t.epl_describe AS eplDescribe
+			,t.status
+			,t.text_state AS textState
+			,t.is_alarm AS isAlarm
+			,t.start_time AS startTime
+			,t.end_time AS endTime
+			,t.epl_belong AS eplBelong
+			,t.schedule_time AS scheduleTime
+			,t.online_time AS onlineTime
+			,t.offline_time AS offlineTime
+			from rtc.rtc_epl t
+			right join rtc.rtc_epl_category_relation tt
+			on t.epl_id = tt.epl_id
+			where t.status != 3
+				<choose>
+			        <when test="userEplParents !=null and userEplParents.size() != 0">
+			            and tt.category_id in 
+						<foreach collection="userEplParents" item="item" separator="," open="(" close=")">
+			                #{item.id}
+				        </foreach>
+			        </when>
+			        <otherwise>
+			            and tt.category_id is null
+			        </otherwise>
+			    </choose>
+			<if test="keyword != null">
+				and (t.epl_name like '%${keyword}%' or t.epl_describe like '%${keyword}%')
+			</if>
+			<if test="parentId != null">
+				and tt.category_id = ${parentId}
+			</if>
+			<if test="eplBelong != null">
+				and t.epl_belong = ${eplBelong}
+			</if>
+			group by t.epl_id
+		) ttt
+		left join rtc_threshold tttt
+  		on ttt.eplId=tttt.epl_id
+		group by ttt.eplId
+  		order by ttt.eplId desc
+	</select>
+
+	<select id="get" resultType="Epl">
+		select
+		t.id
+		,t.epl
+		,t.epl_id AS eplId
+		,group_concat(tt.category_id) AS eplParents
+		,t.epl_name AS eplName
+		,t.epl_describe AS eplDescribe
+		,t.status
+		,t.text_state AS textState
+		,t.is_alarm AS isAlarm
+		,t.start_time AS startTime
+		,t.end_time AS endTime
+		,t.epl_belong AS eplBelong
+		,t.schedule_time AS scheduleTime
+		,t.online_time AS onlineTime
+		,t.offline_time AS offlineTime
+		from rtc.rtc_epl t, rtc.rtc_epl_category_relation tt
+		where t.epl_id = tt.epl_id
+		and t.epl_id=${eplId}
+	</select>
+
+	<update id="update">
+		UPDATE rtc.rtc_epl
+		<set >
+		<if test="eplName != null">
+			epl_name = #{eplName},
+		</if>
+		<if test="epl != null">
+			epl = #{epl},
+		</if>
+		<if test="status != null">
+			status = #{status},
+		</if>
+		<if test="textState != null">
+			text_state = #{textState},
+		</if>
+		<if test="eplDescribe != null">
+			epl_describe = #{eplDescribe},
+		</if>
+		<if test="isAlarm != null">
+			is_alarm = #{isAlarm},
+		</if>
+		<if test="startTime != null and startTime != ''">
+			start_time = #{startTime},
+		</if>
+		<if test="endTime != null and endTime != ''">
+			end_time = #{endTime},
+		</if>
+		<if test="eplBelong != null and eplBelong != ''">
+			epl_belong = #{eplBelong},
+		</if>
+		<if test="scheduleTime != null and scheduleTime != ''">
+			schedule_time = #{scheduleTime},
+		</if>
+		<if test="onlineTime != null and onlineTime != ''">
+			online_time = #{onlineTime},
+		</if>
+		<if test="offlineTime != null and offlineTime != ''">
+			offline_time = #{offlineTime},
+		</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+
+	<insert id="insert">
+		INSERT INTO rtc.rtc_epl(
+		epl_id
+		,epl_name
+		,epl
+		,epl_describe
+		,status
+		,text_state
+		,is_alarm
+		,start_time
+		,end_time
+		,epl_belong
+		,schedule_time
+		,online_time
+		,offline_time
+		) VALUES (
+		#{eplId}
+		,#{eplName}
+		,#{epl}
+		,#{eplDescribe}
+		,#{status}
+		,#{textState}
+		,#{isAlarm}
+		,#{startTime}
+		,#{endTime}
+		,#{eplBelong}
+		,#{scheduleTime}
+		,#{onlineTime}
+		,#{offlineTime}
+		)
+	</insert>
+
+	<delete id="delete">
+		DELETE FROM rtc.rtc_epl
+		WHERE id = #{id}
+	</delete>
+
+	<select id="findUniqueByProperty" resultType="Epl" statementType="STATEMENT">
+		select
+		t.id
+		,t.epl_id AS eplId
+		,t.epl
+		,t.epl_name AS eplName
+		,t.epl_describe AS eplDescribe
+		,group_concat(tt.category_id) AS eplParents
+		,t.status
+		,t.text_state AS textState
+		,t.is_alarm AS isAlarm
+		,t.start_time AS startTime
+		,t.end_time AS endTime
+		,t.epl_belong AS eplBelong
+		,t.schedule_time AS scheduleTime
+		,t.online_time AS onlineTime
+		,t.offline_time AS offlineTime
+		,group_concat(ttt.funcid) AS funcStr
+		,group_concat(tttt.field_id) AS eplGroupKeyStr
+		FROM rtc.rtc_epl t
+        join rtc.rtc_epl_category_relation tt
+		on t.epl_id = tt.epl_id
+		left join rtc.rtc_epl_query_fun_relation ttt
+		on ttt.epl_id = t.epl_id
+		left join rtc.rtc_epl_group_key tttt
+		on tttt.epl_id = t.epl_id
+		where t.${propertyName} = '${value}'
+		group by t.id, t.epl_id, t.epl, t.epl_name, t.epl_describe, t.status, t.text_state, t.is_alarm
+	</select>
+	<select id="findUniqueEplByProperty" resultType="Epl" statementType="STATEMENT">
+		select
+		t.id
+		,t.epl_id AS eplId
+		,t.epl
+		,t.epl_name AS eplName
+		,t.epl_describe AS eplDescribe
+		,group_concat(tt.category_id) AS eplParents
+		,t.status
+		,t.text_state AS textState
+		,t.is_alarm AS isAlarm
+		,t.start_time AS startTime
+		,t.end_time AS endTime
+		,t.epl_belong AS eplBelong
+		,t.schedule_time AS scheduleTime
+		,t.online_time AS onlineTime
+		,t.offline_time AS offlineTime
+		from rtc.rtc_epl t
+		join rtc.rtc_epl_category_relation tt
+		where t.${propertyName} = '${value}'
+		group by t.epl_id
+	</select>
+	
+	<select id="findParentTypeList" resultType="Epl">
+    	select
+		id parentId
+		,category parentName
+    	from rtc.rtc_epl_category
+  	</select>
+
+  	<update id="updateStatus" parameterType="Epl">
+		UPDATE rtc.rtc_epl SET
+		status = #{status}
+		WHERE id = #{id}
+	</update>
+	
+	  <select id="pushZookeeper" parameterType="java.lang.Integer" resultType="com.jzsec.modules.common.entity.PushEpl" >
+		select e.epl_id id,e.epl_name eplName,e.epl,e.is_alarm isAlarm, e.start_time startTime, e.end_time endTime, concat(group_concat(distinct concat(threshold_name,'=',threshold_value))) thresholds, group_concat(distinct concat(schema_name,'|',g.ext_schema)) as allSchema
+		from
+		rtc_epl e
+		left join
+		rtc_threshold t
+		on e.epl_id=t.epl_id
+		join
+		(
+		select s.schema_id id, epl_id, schema_name, concat(schema_name, '-', t.group_keys) ext_schema, t.group_keys
+		from rtc_xp_schema s
+		join
+		(
+		select distinct epl_id,schema_id,group_concat(schema_field_name separator  '-') as group_keys
+		from rtc_epl_group_key
+		group by epl_id,schema_id
+		) t
+		on s.schema_id=t.schema_id
+		group by s.schema_id,schema_name,epl_id
+		) g
+		on g.epl_id=e.epl_id
+		where e.epl_id=#{eplId,jdbcType=INTEGER}
+		group by e.epl_id,e.epl_name,e.epl
+  	</select>
+  	
+  	<select id="findAlarmEpl" resultType="Epl" >
+		select
+		t.id AS alarmId
+		,t.epl_id AS alarmEplId
+		,t.epl_name AS alarmName
+		,t.epl AS alarmSQL
+		,t.alarm_type AS alarmType
+		,t.alarm_group_id AS alarmGroupId
+		,t.epl_describe AS alarmDescribe
+		,t.alarm_template AS alarmTemplate
+		from rtc.rtc_alarm_epl t, rtc.rtc_alarm_epl_relation tt
+		where t.epl_id=tt.alarm_epl_id
+		and tt.epl_id=#{eplId}
+	</select>
+	
+	<select id="findEplCategory" resultType="Epl">
+		SELECT id, epl_id as eplId, epl_name as eplName
+		FROM rtc_epl
+		WHERE status != 3
+	</select>
+	
+	<select id="findEplTypeList" resultType="Epl">
+		SELECT DISTINCTROW e.id, e.epl_id as eplId, e.epl_name as eplName
+		FROM rtc_epl e
+		JOIN rtc_epl_category_relation ec
+		ON e.epl_id = ec.epl_id
+		WHERE e.status != 3
+		<choose>
+	        <when test="parentTypes !=null and parentTypes.size() != 0">
+	            and ec.category_id in 
+				<foreach collection="parentTypes" item="item" separator="," open="(" close=")">
+	                #{item.id}
+		        </foreach>
+	        </when>
+	        <otherwise>
+	            and ec.category_id is null
+	        </otherwise>
+	    </choose>
+	</select>
+	
+	<select id="findEplTypeRelateParentList" resultType="Epl">
+		SELECT e.id, e.epl_id as eplId, e.epl_name as eplName, ec.id as parentId, ec.category as parentName
+		FROM rtc.rtc_epl e
+		JOIN rtc.rtc_epl_category_relation ecr
+		ON e.epl_id = ecr.epl_id
+		JOIN rtc.rtc_epl_category ec
+		ON ec.id = ecr.category_id
+		<choose>
+	        <when test="parentTypes !=null and parentTypes.size() != 0">
+	            and ecr.category_id in 
+				<foreach collection="parentTypes" item="item" separator="," open="(" close=")">
+	                #{item.id}
+		        </foreach>
+	        </when>
+	        <otherwise>
+	            and ecr.category_id is null
+	        </otherwise>
+	    </choose>
+	</select>
+</mapper>

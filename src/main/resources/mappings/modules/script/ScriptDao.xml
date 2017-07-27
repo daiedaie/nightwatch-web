@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jzsec.modules.script.dao.ScriptDao">
+    
+	<select id="findList" resultType="Script">
+		select id,
+		       script_id scriptId,
+			   script_name scriptName,
+			   script_code scriptCode,
+			   script_describe scriptDescribe
+		from rtc.rtc_script
+		<if test="keyword != ''  and keyword != null">
+		where	script_name like concat('%', #{keyword}, '%') 
+			or script_code like concat('%', #{keyword}, '%')
+			or script_describe like concat('%', #{keyword}, '%')
+		</if>
+	</select>
+	<select id="get" resultType="Script">
+		select id,
+		       script_id scriptId,
+			   script_name scriptName,
+			   script_code scriptCode,
+			   script_describe scriptDescribe
+		from rtc.rtc_script
+		where id=#{id}
+	</select>
+
+	<update id="update">
+		UPDATE rtc.rtc_script SET
+			script_name = #{scriptName},
+			script_code = #{scriptCode},
+			script_describe = #{scriptDescribe}
+		WHERE id = #{id}
+	</update>
+
+	<insert id="insert">
+		INSERT INTO rtc.rtc_script(
+			script_id,
+			script_name,
+			script_code,
+			script_describe
+		) VALUES (
+			#{scriptId},
+			#{scriptName},
+			#{scriptCode},
+			#{scriptDescribe}
+		)
+	</insert>
+
+	<update id="delete">
+		DELETE FROM rtc.rtc_script
+		WHERE id = #{id}
+	</update>
+</mapper>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jzsec.modules.cust.dao.CustDao">
+	<select id="findList" resultType="Cust" parameterType="Cust">
+		select DISTINCT 
+		rc.id
+		,rc.fundid
+		,rc.custid
+		,rc.fundname
+		,rc.ymt_code AS ymtCode
+		,rc.orgid
+		,rc.orgname
+		,IF(rc.opendate>0, rc.opendate, null) AS opendate
+		,IF(rc.closedate>0, rc.closedate, null) AS closedate
+		,rc.status
+		,rc.assets
+		,IF(rw.ymt_code  IS NOT NULL, IF(rw.is_follow=1, 1, 0), 0) AS watchStatus
+		from rtc.rtc_custinfo rc
+		left join rtc.rtc_watchlist rw
+		on rc.ymt_code = rw.ymt_code
+		where 1=1
+		<if test="fundid != '' and fundid != null">
+			and rc.fundid like concat('%', #{fundid}, '%')
+		</if>
+		<if test="custid != '' and custid != null">
+			and rc.custid like concat('%', #{custid}, '%')
+		</if>
+		<if test="fundname != '' and fundname != null">
+			and rc.fundname like concat('%', #{fundname}, '%')
+		</if>
+		<if test="ymtCode != '' and ymtCode != null">
+			and rc.ymt_code = #{ymtCode}
+		</if>
+	</select>
+	<select id="findUniqueByProperty" resultType="Cust" statementType="STATEMENT">
+		select
+		id
+		,fundid
+		,custid
+		,fundname
+		,ymt_code AS ymtCode
+		,orgid
+		,orgname
+		,assets
+		,IF(opendate>0, opendate, null) AS opendate
+		,IF(closedate>0, closedate, null) AS closedate
+		,status
+		from rtc.rtc_custinfo
+		where ${propertyName} = '${value}'
+	</select>
+</mapper>

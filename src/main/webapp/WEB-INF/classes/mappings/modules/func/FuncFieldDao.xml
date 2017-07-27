@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jzsec.modules.func.dao.FuncFieldDao">
+
+	<select id="findList" resultType="FuncField">
+		select 
+		id
+		,funcid AS funcid 
+		,field_name AS fieldName
+		,field_describe AS fieldDescribe
+		,is_statistic AS isStatistic
+		,is_condition AS isCondition
+		FROM rtc.rtc_fun_field 
+		where funcid=#{funcid}
+	</select>
+
+	<select id="get" resultType="FuncField">
+		select
+		id
+		,funcid AS funcid 
+		,field_name AS fieldName
+		,field_describe AS fieldDescribe
+		,is_statistic AS isStatistic
+		,is_condition AS isCondition
+		from rtc.rtc_fun_field
+		where funcid = #{funcid}
+		 and field_name = #{fieldName}
+	</select>
+	
+	<delete id="delete">
+		DELETE FROM rtc.rtc_fun_field
+		WHERE id = #{id}
+	</delete>
+
+	<delete id="deletefields">
+		DELETE FROM rtc.rtc_fun_field
+		WHERE funcid=#{funcid}
+	</delete>
+
+	<insert id="insert">
+		INSERT INTO rtc.rtc_fun_field(
+		funcid
+		,field_name
+		,field_describe
+		,is_statistic
+		,is_condition
+        ) VALUES (
+		#{funcid}
+		,#{fieldName}
+		,#{fieldDescribe}
+		,#{isStatistic}
+		,#{isCondition}
+		)
+	</insert>
+	<select id="batchInsert" parameterType="java.util.List">
+      INSERT INTO rtc.rtc_fun_field(funcid, field_name, is_statistic, is_condition, field_describe) VALUES
+      <foreach collection="list" item="item" separator=",">
+            (#{item.funcid},#{item.fieldName},#{item.isStatistic},#{item.isCondition},'')
+      </foreach>
+    </select>
+    <select id="batchDelete" parameterType="java.util.List">
+      DELETE FROM rtc.rtc_fun_field WHERE id in(
+      <foreach collection="list" item="id" separator=",">
+            #{id}
+      </foreach>
+      )
+    </select>
+
+	<update id="update">
+		UPDATE rtc.rtc_fun_field SET
+		funcid = #{funcid}
+		,field_name = #{fieldName}
+		,field_describe = #{fieldDescribe}
+		,is_statistic = #{isStatistic}
+		,is_condition = #{isCondition}
+		WHERE id = #{id}
+	</update>
+
+	<select id="findUniqueByProperty" resultType="FuncField" statementType="STATEMENT">
+		select 
+		id
+		,funcid
+		,field_name AS fieldName
+		,field_describe AS fieldDescribe
+		,is_statistic AS isStatistic
+		,is_condition = #{isCondition}
+		FROM rtc.rtc_fun_field 
+		where ${propertyName} = '${value}'
+	</select>
+</mapper>
