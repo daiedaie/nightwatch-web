@@ -62,36 +62,7 @@ UNLOCK TABLES;
 -- Table structure for table `form_leave`
 --
 
-DROP TABLE IF EXISTS `form_leave`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `form_leave` (
-  `id` varchar(64) NOT NULL DEFAULT '' COMMENT '主键',
-  `user_id` varchar(64) DEFAULT NULL COMMENT '员工',
-  `office_id` varchar(64) DEFAULT NULL COMMENT '归属部门',
-  `area_id` varchar(64) DEFAULT NULL COMMENT '归属区域',
-  `begin_date` datetime DEFAULT NULL COMMENT '请假开始日期',
-  `end_date` datetime DEFAULT NULL COMMENT '请假结束日期',
-  `create_by` varchar(64) DEFAULT NULL COMMENT '创建者',
-  `create_date` datetime DEFAULT NULL COMMENT '创建时间',
-  `update_by` varchar(64) DEFAULT NULL COMMENT '更新者',
-  `update_date` datetime DEFAULT NULL COMMENT '更新时间',
-  `remarks` varchar(255) DEFAULT NULL COMMENT '备注信息',
-  `del_flag` varchar(64) DEFAULT NULL COMMENT '逻辑删除标记（0：显示；1：隐藏）',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='请假单';
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `form_leave`
---
-
-LOCK TABLES `form_leave` WRITE;
-/*!40000 ALTER TABLE `form_leave` DISABLE KEYS */;
-/*!40000 ALTER TABLE `form_leave` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
+-
 -- Table structure for table `monitor`
 --
 
